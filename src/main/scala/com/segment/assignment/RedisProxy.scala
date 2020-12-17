@@ -39,7 +39,7 @@ object RedisProxy {
                     response.content(v)
                     Future.value(response)
                   case None =>
-                    cache.evict(key) // TODO implement evit in cache
+                    cache.evict(key)
                     val response = Response()
                     Future.value(response.statusCode(404))
                 }
@@ -48,7 +48,7 @@ object RedisProxy {
             val ret = lookInRedis(key)
             ret flatMap {
               case Some(v) =>
-                cache.put((key, (0L, 0L, BufToString(v)))) // TODO check index, ord is right
+                cache.put((key, (0L, 0L, BufToString(v))))
                 val response = Response()
                 response.content(v)
                 Future.value(response)
