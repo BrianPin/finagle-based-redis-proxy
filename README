@@ -1,0 +1,30 @@
+# The Assignment
+
+## Requirement
+For the assignment the requirements are listed below
+### Web Service
+
+### Backend with Redis
+* start the server `redis-server /usr/local/etc/redis.conf`
+* ping the server `redis-cli ping`
+
+
+### Local Cache
+* Use specified key to store cache
+* Global expiry time specified on the global configuration
+* Capacity is specified on the global configuration in terms of the number of keys
+* LRU eviction
+
+### Global Configruation
+* Address and port of the backend Redis
+* Expiry time
+* Capacity
+* Port number of listening
+
+### Concurrency
+* Client should be able to connect concurrently
+* Internally requests are able to process sequentially
+
+### Tests
+* End to end system function tests
+* Proxy should connect to a running Redis instance
