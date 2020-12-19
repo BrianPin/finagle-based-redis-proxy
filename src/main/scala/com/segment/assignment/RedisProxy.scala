@@ -24,7 +24,7 @@ object RedisProxy {
           val key = request.getParam("key")
           println(key)
           if (cache.contains(key)) {
-            val cachedVal = cache.get(key).map(_._3)
+            val cachedVal = cache.get(key)
             cachedVal match {
               case Some(v) =>
                 cache.hit(key)
@@ -48,7 +48,7 @@ object RedisProxy {
             val ret = lookInRedis(key)
             ret flatMap {
               case Some(v) =>
-                cache.put((key, (0L, 0L, BufToString(v))))
+                cache.put((key, BufToString(v)))
                 val response = Response()
                 response.content(v)
                 Future.value(response)
@@ -57,7 +57,7 @@ object RedisProxy {
                 Future.value(response.statusCode(404))
             }
           }
-        case Method.Post => {
+        case Method.Post =>
           val key = request.getParam("key")
           val value = request.getParam("value")
           val kB = Buf.Utf8(key)
@@ -65,7 +65,6 @@ object RedisProxy {
           val response = Response()
           redisClient.set(kB, vB)
           Future.value(response.statusCode(200))
-        }
       }
     }
   }

@@ -12,24 +12,23 @@ object TTLLRUCache {
 
 // Long, Long, V => First long is index for LRU, 2nd long is time msec
 class TTLLRUCache[K, V](maxSize: Long, idx: Long, ttl: Duration, cache: Map[K, (Long, Long, V)], ord: SortedMap[Long, K])
-    (clock: () => Long) extends Cache[K, (Long, Long, V)] {
+    (clock: () => Long) extends Cache[K, V] {
   // Scala's SortedMap requires an ordering on pairs. To guarantee
   // sorting on index only, LRUCache defines an implicit ordering on K
   // that treats all K as equal.
   protected implicit val keyOrdStop = new Ordering[K] { def compare(l: K, r: K) = 0 }
 
   override def occupancy: Int = cache.size
-  override def iterator: Iterator[(K, (Long, Long, V))] = cache.iterator
-  override def toMap: Map[K, (Long, Long, V)] = cache
-  override def get(k: K): Option[(Long, Long, V)] = cache.get(k)
-  override def put(kv: (K, (Long, Long, V))): (Set[K], TTLLRUCache[K, V]) =
-    putWithTime(kv, clock())
+  override def iterator: Iterator[(K, V)] = cache.iterator.map {case (k, (i, j, v)) => k -> v }
+  override def toMap: Map[K, V] = cache.mapValues(_._3)
+  override def get(k: K): Option[V] = cache.get(k).map {_._3}
+  override def put(kv: (K, V)): (Set[K], TTLLRUCache[K, V]) = putWithTime(kv, clock())
 
-  override def empty: Cache[K, (Long, Long, V)] = new TTLLRUCache(maxSize, 0, ttl, Map.empty[K, (Long, Long, V)], SortedMap.empty[Long, K])(clock)
+  override def empty: Cache[K, V] = TTLLRUCache(maxSize, ttl)
 
   // provide set of keys expired
   protected def toRemoveExpired(currentMillis: Long): Set[K] =
-    toMap.collect {
+    cache.collect {
       case (k, (idx, expiration, _)) if expiration < currentMillis => k
     }(breakOut)
 
@@ -50,25 +49,37 @@ class TTLLRUCache[K, V](maxSize: Long, idx: Long, ttl: Duration, cache: Map[K, (
     (staleCache -- keys, staleOrd -- indices)
   }
 
-  protected def putWithTime(kv: (K, (Long, Long, V)), currentMsec: Long): (Set[K], TTLLRUCache[K, V]) = {
+  // There seems no need to pass LLV into it, just V is fine
+  protected def putWithTime(kv: (K, V), currentMsec: Long): (Set[K], TTLLRUCache[K, V]) = {
+    val (key, value) = kv
     val expiredKeys = toRemoveExpired(currentMsec)
     val (freshCache, freshOrd) = removeExpiredKey(expiredKeys, cache, ord)
     val (keyToEvict, finalCache, finalOrd) = removeLRU(kv._1, freshCache, freshOrd)
-    (keyToEvict, new TTLLRUCache(maxSize, idx + 1, ttl, finalCache, finalOrd)(clock))
+    (keyToEvict, new TTLLRUCache(maxSize,
+      idx + 1,
+      ttl,
+      finalCache + (key -> (idx + 1, (Duration.fromMilliseconds(currentMsec) + ttl).inMilliseconds , value)),
+      finalOrd + (idx + 1 -> key))(clock))
   }
 
-  override def hit(k: K): Cache[K, (Long, Long, V)] = {
+  override def hit(k: K): Cache[K, V] = {
     cache.get(k).map {
-      case (idx, timel, v) =>
+      case (idx, timeVal, v) =>
         val newIdx = idx + 1
-        val newCache = cache + (k -> (newIdx, timel, v))
+        val newCache = cache + (k -> (newIdx, timeVal, v))
         val newOrd = ord - idx + (newIdx -> k)
         new TTLLRUCache(maxSize, newIdx, ttl, newCache, newOrd)(clock)
     }.getOrElse(this)
   }
 
-  override def evict(k: K): (Option[(Long, Long, V)], Cache[K, (Long, Long, V)]) = {
-    cache.get(k).map (x => (Some(x), new TTLLRUCache(maxSize, 0, ttl, cache - k, ord - x._1)(clock)))
+  override def evict(k: K): (Option[V], Cache[K, V]) = {
+    cache.get(k).map (x => (Some(x._3), new TTLLRUCache(maxSize, 0, ttl, cache - k, ord - x._1)(clock)))
         .getOrElse((None, this))
+  }
+
+  def putClocked(kv: (K, V)): (Set[K], TTLLRUCache[K, V]) = {
+    val (key, value) = kv
+    val now = clock()
+    putWithTime((key, value), now)
   }
 }

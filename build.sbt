@@ -11,8 +11,12 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "storehaus-cache" % "0.15.0",
   "org.scalactic" %% "scalactic" % "3.2.2",
   "org.scalatest" %% "scalatest" % "3.2.2" % "test",
+  "org.scalatest" %% "scalatest-wordspec" % "3.2.2" % "test",
+  "org.scalatestplus" %% "mockito-3-4" % "3.2.2.0" % "test",
+  "org.scalamock" %% "scalamock" % "4.4.0" % "test",
   "org.scalacheck" %% "scalacheck" % "1.14.1" % "test",
   "org.apache.logging.log4j" % "log4j-api" % "2.14.0",
   "org.apache.logging.log4j" % "log4j-core" % "2.14.0",
-  "org.apache.logging.log4j" % "log4j-iostreams" % "2.14.0"
+  "org.apache.logging.log4j" % "log4j-iostreams" % "2.14.0",
+  "com.github.kstyrc" % "embedded-redis" % "0.6" % Test
 )
