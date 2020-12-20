@@ -1,11 +1,8 @@
 package com.github.bpin
 
-import java.util.Properties
-
 import com.twitter.finagle.{Http, Service}
 import com.twitter.util.{Await, Future}
 import java.net.InetSocketAddress
-import scala.io.Source
 
 object Main {
 
@@ -14,8 +11,9 @@ object Main {
     val address = new InetSocketAddress(Configuration.get_property("server_port").asInstanceOf[String].toInt)
     //val service = new ServiceProxy()
     val service = RedisProxy.proxyService
-    val server = Http.server.serve(address, service)
-
+    val server = Http.server.withAdmissionControl
+      .concurrencyLimit(Configuration.get_property("max_concurrent_requests").toInt)
+      .serve(address, service)
     try {
       Await.ready(server)
     } catch {

@@ -1,6 +1,8 @@
 package com.github.bpin
 
 import java.net.InetSocketAddress
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.twitter.finagle.{Http, ListeningServer, Redis, Service, http}
 import com.twitter.finagle.http.{Method, Request, Response, Status}
@@ -13,6 +15,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 
 
 class RedisProxyTest extends AnyFunSpec with BeforeAndAfterAll with MockitoSugar with BeforeAndAfterEach {
+  val logger = LoggerFactory.getLogger("RedisProxyTest")
   var server: ListeningServer = _
   var client: Service[Request, Response] = _
   val testKeyValues: Map[Int, String] = Map(1->"one", 2->"two", 3->"three", 4->"four")
@@ -26,27 +29,18 @@ class RedisProxyTest extends AnyFunSpec with BeforeAndAfterAll with MockitoSugar
   }
 
   override def beforeAll(): Unit = {
-    println("Test starts")
     // you need to have backend redis server ready
     val httpPort = Configuration.get_property("server_port").asInstanceOf[String].toInt
     val address = new InetSocketAddress(httpPort)
     val service = RedisProxy.proxyService
-    println("start http service")
+    logger.info("Start unit test local http server")
     server = Http.server.serve(address, service)
-    try {
-
-      //Await.ready(server)
-    } catch {
-      case e: InterruptedException => println("Server stopped execution")
-      case e: Exception => println("Exception...")
-    }
     client = Http.newService(s"localhost:$httpPort")
   }
 
   override def afterAll(): Unit = {
-    println("shutdown http service")
+    logger.info("Shutdown unit test local http server")
     server.close()
-    println("Test done")
   }
 
   describe("Redis Server Alone SetCommand Test") {

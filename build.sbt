@@ -5,6 +5,8 @@ version := "0.1"
 scalaVersion := "2.12.4"
 
 libraryDependencies ++= Seq(
+  "org.slf4j" % "slf4j-api" % "1.7.5",
+  "org.slf4j" % "slf4j-simple" % "1.7.5",
   "com.twitter" %% "util-core" % "20.5.0",
   "com.twitter" %% "finagle-redis" % "20.5.0",
   "com.twitter" %% "finagle-http" % "20.5.0",

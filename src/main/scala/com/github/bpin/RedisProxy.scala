@@ -1,5 +1,8 @@
 package com.github.bpin
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.twitter.finagle.redis.Client
 import com.twitter.finagle.http.{Method, Request, Response}
 import com.twitter.finagle.redis.util.BufToString
@@ -9,6 +12,7 @@ import com.twitter.io.Buf
 
 
 object RedisProxy {
+  val logger = LoggerFactory.getLogger(RedisProxy.getClass);
   val redisClient: Client = Redis.newRichClient(Configuration.get_property("redis_server_with_port"))
   val cache: TTLLRUCache[String, String] = TTLLRUCache(Configuration.get_property("lru_cache_capacity").toLong,
     Duration.fromSeconds(Configuration.get_property("ttl_cache_duration").toInt))
@@ -22,11 +26,12 @@ object RedisProxy {
       request.method match {
         case Method.Get =>
           val key = request.getParam("key")
-          println(key)
+          logger.info(s"Got HTTP-GET request, Key ${key}")
           if (cache.contains(key)) {
             val cachedVal = cache.get(key)
             cachedVal match {
               case Some(v) =>
+                logger.info(s"Get Value ${v} from LRU-TTL Cache")
                 cache.hit(key)
                 val response = Response()
                 response.content(Buf.Utf8(v))
@@ -48,6 +53,7 @@ object RedisProxy {
             val ret = lookInRedis(key)
             ret flatMap {
               case Some(v) =>
+                logger.info(s"Get Value ${BufToString(v)} from Redis")
                 cache.put((key, BufToString(v)))
                 val response = Response()
                 response.content(v)
@@ -60,6 +66,7 @@ object RedisProxy {
         case Method.Post =>
           val key = request.getParam("key")
           val value = request.getParam("value")
+          logger.info(s"Got HTTP-POST request, Key ${key}")
           val kB = Buf.Utf8(key)
           val vB = Buf.Utf8(value)
           val response = Response()
