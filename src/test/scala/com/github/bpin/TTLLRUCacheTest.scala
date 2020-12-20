@@ -1,4 +1,5 @@
-package com.segment.assignment
+package com.github.bpin
+
 import org.scalatest.wordspec.AnyWordSpec
 import com.twitter.util.Duration
 

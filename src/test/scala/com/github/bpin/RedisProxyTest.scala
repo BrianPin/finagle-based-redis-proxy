@@ -1,4 +1,5 @@
-package com.segment.assignment
+package com.github.bpin
+
 import java.net.InetSocketAddress
 
 import com.twitter.finagle.{Http, ListeningServer, Redis, Service, http}

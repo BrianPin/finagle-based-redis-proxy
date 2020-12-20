@@ -1,4 +1,5 @@
-package com.segment.assignment
+package com.github.bpin
+
 import com.twitter.storehaus.cache.Cache
 import com.twitter.util.Duration
 

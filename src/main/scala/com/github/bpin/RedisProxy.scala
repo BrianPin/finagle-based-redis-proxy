@@ -1,4 +1,4 @@
-package com.segment.assignment
+package com.github.bpin
 
 import com.twitter.finagle.redis.Client
 import com.twitter.finagle.http.{Method, Request, Response}

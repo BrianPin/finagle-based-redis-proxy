@@ -1,4 +1,5 @@
-package com.segment.assignment
+package com.github.bpin
+
 import java.util.Properties
 
 import com.twitter.finagle.{Http, Service}
