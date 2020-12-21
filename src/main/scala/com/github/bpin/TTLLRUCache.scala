@@ -1,5 +1,8 @@
 package com.github.bpin
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 import com.twitter.storehaus.cache.Cache
 import com.twitter.util.Duration
 
@@ -14,6 +17,7 @@ object TTLLRUCache {
 // Long, Long, V => First long is index for LRU, 2nd long is time msec
 class TTLLRUCache[K, V](maxSize: Long, idx: Long, ttl: Duration, cache: Map[K, (Long, Long, V)], ord: SortedMap[Long, K])
     (clock: () => Long) extends Cache[K, V] {
+  val logger = LoggerFactory.getLogger(TTLLRUCache.getClass);
   // Scala's SortedMap requires an ordering on pairs. To guarantee
   // sorting on index only, LRUCache defines an implicit ordering on K
   // that treats all K as equal.
@@ -39,6 +43,7 @@ class TTLLRUCache[K, V](maxSize: Long, idx: Long, ttl: Duration, cache: Map[K, (
       val (idxToEvict, keyToEvict) =
         freshCach.get(key).map { case (i, t, _) => (i, key) }
           .getOrElse(ord.min)
+      logger.info(s"Key to remove because of LRU ${keyToEvict}")
       (Set(keyToEvict), freshCach - keyToEvict, freshOrd - idxToEvict)
     } else {
       (Set.empty[K], freshCach, freshOrd)
@@ -47,6 +52,7 @@ class TTLLRUCache[K, V](maxSize: Long, idx: Long, ttl: Duration, cache: Map[K, (
   protected def removeExpiredKey(keys: Set[K], staleCache: Map[K, (Long, Long, V)], staleOrd: SortedMap[Long, K]):
     (Map[K, (Long, Long, V)], SortedMap[Long, K]) = {
     val indices = keys.flatMap(k => staleCache.get(k).map(_._1))
+    logger.info(s"Key to remove because of TTL ${keys}")
     (staleCache -- keys, staleOrd -- indices)
   }
 
