@@ -1,30 +1,36 @@
-# The Assignment
+# The Redis proxy
 
 ## Requirement
 For the assignment the requirements are listed below
 ### Web Service
+* There is a web server listening port configured by config file: resources/config.properties
+* The web server only takes query parameters as this is a toy project
+* for example ?key={....}&value={...} for POST (write) 
+* And ?key={...} for GET (read)
 
 ### Backend with Redis
-* start the server `redis-server /usr/local/etc/redis.conf`
-* ping the server `redis-cli ping`
+* The proxy is configured to talk to redis through the config.properties file mentioned above
 
-
-### Local Cache
+### Local Cache: TTLLRUCache: (aka: TTL + LRU cache)
 * Use specified key to store cache
 * Global expiry time specified on the global configuration
 * Capacity is specified on the global configuration in terms of the number of keys
-* LRU eviction
+* LRU eviction and TTL expiry for the cache keys
+* The implementation is based on Twitter's storehaus's TTL and LRU cache combined
 
-### Global Configruation
+### Global Configuration
 * Address and port of the backend Redis
 * Expiry time
 * Capacity
 * Port number of listening
+* Max concurrency
 
 ### Concurrency
 * Client should be able to connect concurrently
 * Internally requests are able to process sequentially
+* The implementation here utilize finagle libraries' maxConcurrentRequests.
 
 ### Tests
 * End to end system function tests
+* The system tests need a backing redis server as there is no suitable embedded redis server implementation
 * Proxy should connect to a running Redis instance
