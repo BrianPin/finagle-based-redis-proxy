@@ -34,3 +34,10 @@ For the assignment the requirements are listed below
 * End to end system function tests
 * The system tests need a backing redis server as there is no suitable embedded redis server implementation
 * Proxy should connect to a running Redis instance
+
+### How to local basic test
+* Start a local redis service, `redis-server /usr/local/etc/redis.conf`
+* Start this redis-proxy service `./sbt 'runMain com.github.bpin.Main'`
+* Use a curl command: 
+  * GET: curl  "localhost:9090/?key=joe"
+  * POST: curl -X POST -D - "localhost:9090/?key=name&value=brian" 
